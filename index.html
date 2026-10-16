@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self'; connect-src 'self'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Erika">
+<meta name="theme-color" content="#111214">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Erika · Status</title>
+<style>
+:root{--bg:#f2f2f7;--card:#fff;--fg:#1c1c1e;--mut:#8e8e93;--line:#e5e5ea;--ok:#34c759;--warn:#ff9f0a;--bad:#ff3b30}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--fg:#f2f2f7;--mut:#8e8e93;--line:#2c2c2e}}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden;max-width:100vw}
+th,td{white-space:nowrap}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.35 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;padding:env(safe-area-inset-top) 12px calc(24px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:baseline;justify-content:space-between;padding:14px 4px 8px}
+h1{font-size:28px;margin:0;font-weight:700}
+#meta{color:var(--mut);font-size:13px;text-align:right}
+#hero{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:18px;padding:14px 16px;margin:0 0 12px}
+#hero .big{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:28px;flex:none}
+#hero b{font-size:19px;display:block}#hero span{color:var(--mut);font-size:13px}
+.tok{background:color-mix(in srgb,var(--ok) 18%,transparent)}.twarn{background:color-mix(in srgb,var(--warn) 22%,transparent)}.tbad{background:color-mix(in srgb,var(--bad) 20%,transparent)}
+#pills{display:flex;gap:6px;padding:0 2px 12px;overflow-x:auto;scrollbar-width:none}#pills::-webkit-scrollbar{display:none}
+.pill{display:flex;align-items:center;gap:5px;background:var(--card);border-radius:20px;padding:6px 11px 6px 9px;font-size:13px;font-weight:600;text-decoration:none;color:var(--fg);white-space:nowrap;border:1.5px solid transparent}
+.pill.warn{border-color:var(--warn)}.pill.bad{border-color:var(--bad)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.ok{background:var(--ok)}.warn{background:var(--warn)}.bad{background:var(--bad)}
+.pill.ok,.pill.warn,.pill.bad{background:var(--card)}
+section{background:var(--card);border-radius:18px;margin:0 0 12px;overflow:hidden}
+section h2{font-size:17px;margin:0;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:18px;flex:none}
+.chip{margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:10px}
+.chip.ok{color:#1d7a35;background:color-mix(in srgb,var(--ok) 20%,transparent)}
+.chip.warn{color:#a35f00;background:color-mix(in srgb,var(--warn) 22%,transparent)}
+.chip.bad{color:#c4271f;background:color-mix(in srgb,var(--bad) 20%,transparent)}
+@media(prefers-color-scheme:dark){.chip.ok{color:#5de07f}.chip.warn{color:#ffc04d}.chip.bad{color:#ff6b62}}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 14px;border-top:1px solid var(--line)}
+.row .k{color:var(--mut);flex:0 1 50%;min-width:0;display:flex;align-items:center;gap:8px}
+.row .k i{font-style:normal;width:20px;text-align:center;flex:none}
+.row .v{flex:1 1 50%;min-width:0;text-align:right;display:flex;align-items:center;gap:7px;justify-content:flex-end;overflow-wrap:anywhere;font-weight:500}
+.row .v.only{text-align:left;justify-content:flex-start}
+.st{font-size:13px;flex:none}
+.note{font-size:13px;color:var(--mut);padding:8px 14px 12px;border-top:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 5px;text-align:right;border-top:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left;padding-left:14px}
+th:last-child,td:last-child{padding-right:14px}
+th{color:var(--mut);font-weight:500}
+#lock{max-width:340px;margin:30vh auto 0;text-align:center;color:var(--mut)}
+#stale{display:none;background:var(--warn);color:#000;border-radius:10px;padding:8px 12px;margin:0 2px 12px;font-size:13px;font-weight:600}
+</style>
+</head>
+<body>
+<header><h1>Status</h1><div id="meta"></div></header>
+<div id="stale"></div>
+<div id="hero"></div>
+<div id="pills"></div>
+<main id="main"><div id="lock">Lädt…</div></main>
+<script>
+const K='erika-status-key';
+let key=null;
+function b64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}
+function b64url(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return b64(s)}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+async function getKey(){
+  const h=new URLSearchParams(location.hash.slice(1)).get('k');
+  if(h)localStorage.setItem(K,h);
+  const raw=h||localStorage.getItem(K);
+  if(!raw)return null;
+  return crypto.subtle.importKey('raw',b64url(raw),'AES-GCM',false,['decrypt']);
+}
+const lv={ok:'ok',warn:'warn',bad:'bad'};
+const SI={'Erika':'😺','Smart Home':'🏠','Netzwerk':'🌐','Sonos':'🔊','YouTube':'▶️','Dienste':'☁️'};
+const ST={ok:'✅',warn:'⚠️',bad:'⛔'};
+const CH={ok:'OK',warn:'Hinweis',bad:'Problem'};
+const II=[[/gateway/i,'🛰️'],[/version/i,'🏷️'],[/läuft seit/i,'⏱️'],[/laufzeit/i,'⚙️'],[/heartbeat/i,'💓'],[/backup/i,'💾'],
+ [/ankauf/i,'📱'],[/memory|dream/i,'🧠'],[/^job/i,'🗓️'],[/speicher/i,'💽'],[/^last/i,'📈'],[/wlan/i,'📶'],[/homekit|hue/i,'💡'],
+ [/router/i,'📡'],[/sonos-aus/i,'🔇'],[/längster/i,'⏳'],[/letzter/i,'🕒'],[/sonde/i,'🔬'],[/arc|tv/i,'📺'],[/schlaf/i,'🛏️'],
+ [/play/i,'🔈'],[/küche|move/i,'🍳'],[/video/i,'🎬'],[/download/i,'⬇️'],[/seite/i,'📄'],[/geprüft/i,'🕒'],[/fehler/i,'❗'],
+ [/google/i,'🔎'],[/netflix/i,'🎞️'],[/spotify/i,'🎧'],[/apple|icloud/i,'🍎'],[/wdr|1live/i,'📻'],[/wasser|leak/i,'💧'],[/batterie/i,'🔋']];
+function ii(k){for(const [r,e] of II)if(r.test(k))return e;return '•'}
+function render(d){
+  const age=Math.round((Date.now()/1000-d.ts)/60);
+  document.getElementById('meta').innerHTML=esc(d.generated)+'<br>'+(age<1?'gerade eben':'vor '+age+' min');
+  const st=document.getElementById('stale');
+  if(age>25){st.style.display='block';st.textContent='⚠️ Daten '+age+' min alt — Mac mini oder Upload hängt.'}else st.style.display='none';
+  const bad=d.sections.filter(s=>s.level==='bad'),warn=d.sections.filter(s=>s.level==='warn');
+  const all=bad.length?'bad':warn.length?'warn':'ok';
+  const msg=all==='ok'?'Alles läuft':bad.length?bad.length+' Problem'+(bad.length>1?'e':''):warn.length+' Hinweis'+(warn.length>1?'e':'');
+  const who=[...bad,...warn].map(s=>s.title).join(' · ')||d.sections.length+' Bereiche geprüft';
+  document.getElementById('hero').innerHTML=`<div class="big t${all}">${ST[all]}</div><div><b>${esc(msg)}</b><span>${esc(who)}</span></div>`;
+  document.getElementById('pills').innerHTML=d.sections.map((s,i)=>`<a class="pill ${lv[s.level]}" href="#s${i}" onclick="document.getElementById('s${i}').scrollIntoView({behavior:'smooth'});return false">${SI[s.title]||'•'} ${esc(s.title)}${s.level==='ok'?'':' '+ST[s.level]}</a>`).join('');
+  document.getElementById('main').innerHTML=d.sections.map((s,i)=>{
+    let h=`<section id="s${i}"><h2><span class="ico t${lv[s.level]}">${SI[s.title]||'•'}</span>${esc(s.title)}<span class="chip ${lv[s.level]}">${CH[s.level]}</span></h2>`;
+    for(const [k,v,l] of s.items){
+      const mark=l==='ok'?'<span class="dot ok"></span>':`<span class="st">${ST[l]}</span>`;
+      h+=k?`<div class="row"><span class="k"><i>${ii(k)}</i>${esc(k)}</span><span class="v">${esc(v)}${mark}</span></div>`
+          :`<div class="row"><span class="v only"><span class="st">${l==='ok'?'✅':ii(v)}</span>${esc(v)}</span></div>`;
+    }
+    if(s.table){h+='<table><tr>'+s.table.head.map(x=>`<th>${esc(x)}</th>`).join('')+'</tr>'+s.table.rows.map(r=>'<tr>'+r.map(x=>`<td>${esc(x)}</td>`).join('')+'</tr>').join('')+'</table>'}
+    if(s.note)h+=`<div class="note">ℹ️ ${esc(s.note)}</div>`;
+    return h+'</section>';
+  }).join('');
+}
+async function load(){
+  try{
+    key=key||await getKey();
+    if(!key){document.getElementById('main').innerHTML='<div id="lock">🔒 Bitte den vollständigen Link von Erika öffnen.</div>';return}
+    const r=await fetch('data.enc?'+Date.now(),{cache:'no-store'});
+    const e=await r.json();
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct));
+    render(JSON.parse(new TextDecoder().decode(pt)));
+  }catch(err){
+    if(err.name==='OperationError'){localStorage.removeItem(K);key=null;document.getElementById('main').innerHTML='<div id="lock">🔒 Schlüssel ungültig.</div>'}
+    else document.getElementById('meta').textContent='offline · '+err.message;
+  }
+}
+load();
+setInterval(load,5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+</script>
+</body>
+</html>
